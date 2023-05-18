@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.IdentityModel.Tokens;
+using MyAspNetCoreApp.Web.Filters;
 using MyAspNetCoreApp.Web.Helpers;
 using MyAspNetCoreApp.Web.Models;
 using MyAspNetCoreApp.Web.ViewModels;
@@ -39,6 +40,7 @@ namespace MyAspNetCoreApp.Web.Controllers
 
         }
 
+        [CacheResourceFilter]
         public IActionResult Index()
         {
             //var products = _productRepository.GetAll(); ilk hali
@@ -64,6 +66,7 @@ namespace MyAspNetCoreApp.Web.Controllers
             return View(_mapper.Map<List<ProductViewModel>>(products));
         }
 
+        [ServiceFilter(typeof(NotFoundFilter))] //notfoundfilter içerisinde constructor tanımladığımızdan böyle oluşturduk. 
         [Route("urunler/urun/{productid}",Name ="product")]
         public IActionResult GetById(int productid)
         {
@@ -71,6 +74,7 @@ namespace MyAspNetCoreApp.Web.Controllers
             return View(_mapper.Map<ProductViewModel>(product));
         }
 
+        [ServiceFilter(typeof(NotFoundFilter))]
         [HttpGet("{id}")]
         public IActionResult Remove(int id)
         {
@@ -164,6 +168,7 @@ namespace MyAspNetCoreApp.Web.Controllers
             
         }
 
+        [ServiceFilter(typeof(NotFoundFilter))]
         [HttpGet]
         public IActionResult Update(int id)
         {
