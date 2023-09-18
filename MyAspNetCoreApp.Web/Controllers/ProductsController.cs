@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MyAspNetCoreApp.Web.Filters;
 using MyAspNetCoreApp.Web.Helpers;
@@ -17,8 +18,9 @@ namespace MyAspNetCoreApp.Web.Controllers
         
 
         private readonly ProductRepository _productRepository;
+        private readonly IFileProvider _fileProvider;
 
-        public ProductsController(AppDbContext context, IMapper mapper)
+        public ProductsController(AppDbContext context, IMapper mapper, IFileProvider fileProvider)
         {
             //DI Container
             //Dependency Injection Pattern
@@ -26,6 +28,7 @@ namespace MyAspNetCoreApp.Web.Controllers
             _productRepository = new ProductRepository();
             _context = context;
             _mapper = mapper;
+            _fileProvider = fileProvider;
 
             //if (!_context.Products.Any())
             //{
@@ -40,7 +43,7 @@ namespace MyAspNetCoreApp.Web.Controllers
 
         }
 
-        [CacheResourceFilter]
+        //[CacheResourceFilter]
         public IActionResult Index()
         {
             //var products = _productRepository.GetAll(); ilk hali
@@ -123,6 +126,50 @@ namespace MyAspNetCoreApp.Web.Controllers
             //    ModelState.AddModelError(string.Empty, "Ürün ismi A harfi ile başlayamaz.");
             //}
 
+            IActionResult result = null;
+            
+            if (ModelState.IsValid)
+            {
+                try
+                {
+
+                    var root = _fileProvider.GetDirectoryContents("wwwroot");
+                    var images = root.First(x => x.Name == "images");
+
+                    var randomImageName = Guid.NewGuid() + Path.GetExtension(newProduct.Image.FileName);
+
+                    var path = Path.Combine(images.PhysicalPath, randomImageName);
+                    using var stream = new FileStream(path, FileMode.Create);
+                    newProduct.Image.CopyTo(stream);
+
+                    var product = _mapper.Map<Product>(newProduct);
+                    product.ImagePath = randomImageName;
+
+
+
+                    _context.Products.Add(product);
+                    _context.SaveChanges();
+
+                    TempData["status"] = "Ürün başarıyla eklendi.";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception)
+                {
+
+                    
+                    result= View();
+                }
+
+
+            }
+
+            else
+            {
+
+                result= View();
+
+            }
+
             ViewBag.Expire = new Dictionary<string, int>()
             {
                 { "1 Ay",1},
@@ -138,34 +185,9 @@ namespace MyAspNetCoreApp.Web.Controllers
                 new(){Data="Sarı", Value="Sarı"}
             }, "Value", "Data");
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    
-                    _context.Products.Add(_mapper.Map<Product>(newProduct));
-                    _context.SaveChanges();
-
-                    TempData["status"] = "Ürün başarıyla eklendi.";
-                    return RedirectToAction("Index");
-                }
-                catch (Exception)
-                {
-
-                    ModelState.AddModelError(String.Empty, "Ürün kaydedilirken hata oluştu.Tekrar deneyiniz");
-                    return View();
-                }
+            return result;
 
 
-            }
-
-            else
-            {
-
-                return View();
-
-            }
-            
         }
 
         [ServiceFilter(typeof(NotFoundFilter))]

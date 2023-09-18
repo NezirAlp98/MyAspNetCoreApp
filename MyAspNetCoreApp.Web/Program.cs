@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using MyAspNetCoreApp.Web.Filters;
 using MyAspNetCoreApp.Web.Helpers;
 using MyAspNetCoreApp.Web.Models;
@@ -15,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     //dbContext.products
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlCon"));
 });
+
+builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.GetCurrentDirectory()));
 builder.Services.AddTransient<IHelper, Helper>();
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());

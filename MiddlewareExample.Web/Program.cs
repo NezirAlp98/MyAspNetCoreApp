@@ -1,3 +1,5 @@
+using MiddlewareExample.Web.Middlewares;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,19 +19,21 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 
-app.MapWhen(context => context.Request.Query.ContainsKey("name"), app =>
-{
-    app.Use(async (context, next) =>
-    {
-        await context.Response.WriteAsync("Before 1. Middleware\n");
-        await next();
-        await context.Response.WriteAsync("After 1.Middleware\n");
-    });
-    app.Run(async context =>
-    {
-        await context.Response.WriteAsync("Terminal 3. Middleware\n");
-    });
-});
+#region Mapwhen kullanýmý
+//app.MapWhen(context => context.Request.Query.ContainsKey("name"), app =>
+//{
+//    app.Use(async (context, next) =>
+//    {
+//        await context.Response.WriteAsync("Before 1. Middleware\n");
+//        await next();
+//        await context.Response.WriteAsync("After 1.Middleware\n");
+//    });
+//    app.Run(async context =>
+//    {
+//        await context.Response.WriteAsync("Terminal 3. Middleware\n");
+//    });
+//}); 
+#endregion
 
 
 
@@ -68,6 +72,9 @@ app.MapWhen(context => context.Request.Query.ContainsKey("name"), app =>
 //    //});
 //}); 
 #endregion
+
+
+app.UseMiddleware<WhiteIpAdressControlMiddleware>(); //Middleware ekleme iþlemi
 
 
 
